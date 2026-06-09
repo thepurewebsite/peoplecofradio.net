@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE PEOPLE'S COF RADIO</title>
+    <style>
+        :root {
+            --bg-color: #000000;
+            --card-bg: #050505;
+            --card-hover: #0d0d0d;
+            --crimson: #dc143c;
+            --crimson-glow: rgba(220, 20, 60, 0.7);
+            --crimson-dim: rgba(220, 20, 60, 0.15);
+            --text-main: #e0e0e0;
+            --text-muted: #777777;
+            --panel-border: 1px solid #1a1a1a;
+            --detailed-border: 1px solid rgba(220, 20, 60, 0.25);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Times New Roman', Times, serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            overflow-x: hidden;
+            height: 100vh;
+            font-size: 0.85rem;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+            border-left: 1px solid #111;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--crimson);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ff2a4b;
+        }
+
+        /* --- INTRO SCREEN (CRIMSON & BLACK ONLY) --- */
+        #intro-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-color);
+            box-shadow: inset 0 0 80px rgba(220, 20, 60, 0.3);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.8s ease-in-out, visibility 0.8s ease-in-out;
+        }
+
+        #intro-screen.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .intro-container {
+            background: #020202;
+            padding: 40px 50px;
+            border: 1px solid var(--crimson);
+            outline: 4px solid #000000;
+            box-shadow: 0 0 30px var(--crimson-dim), inset 0 0 15px rgba(220, 20, 60, 0.1);
+            text-align: center;
+            max-width: 90%;
+            width: 480px;
+        }
+
+        .intro-title {
+            font-size: 2.2rem;
+            font-weight: normal;
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+            color: #ffffff;
+            text-shadow: 0 0 10px var(--crimson), 0 0 20px var(--crimson);
+        }
+
+        .intro-subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+        }
+
+        .play-btn {
+            background: transparent;
+            color: #ffffff;
+            border: 1px solid var(--crimson);
+            padding: 10px 35px;
+            font-size: 1.05rem;
+            letter-spacing: 2px;
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--crimson-dim);
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .play-btn:hover {
+            background: var(--crimson);
+            box-shadow: 0 0 20px var(--crimson);
+            color: #000000;
+            font-weight: bold;
+        }
+
+        .dev-note-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-top: 20px;
+            cursor: pointer;
+            text-decoration: underline;
+            letter-spacing: 0.5px;
+            transition: color 0.2s ease;
+        }
+
+        .dev-note-btn:hover {
+            color: var(--crimson);
+            text-shadow: 0 0 5px var(--crimson);
+        }
+
+        /* --- DEVELOPER NOTE MODAL (POPUP) --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: #050505;
+            border: 1px solid var(--crimson);
+            padding: 30px;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(220, 20, 60, 0.4), inset 0 0 10px rgba(220, 20, 60, 0.1);
+            outline: 2px solid #000;
+            transform: scale(0.95);
+            transition: transform 0.5s ease;
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-close-btn {
+            margin-top: 25px;
+            background: transparent;
+            color: var(--crimson);
+            border: 1px solid var(--crimson);
+            padding: 8px 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close-btn:hover {
+            background: var(--crimson);
+            color: #000;
+        }
+
+        /* --- MAIN SITE INTERFACE --- */
+        #main-site {
+            opacity: 0;
+            visibility: hidden;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            transition: opacity 0.8s ease-in-out, visibility 0.8s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            pointer-events: none;
+            height: 100%;
+        }
+
+        #main-site.fade-in {
+            opacity: 1;
+            visibility: visible;
+            position: relative;
+            pointer-events: auto;
+        }
+
+        /* DETAILED FIXED HEADER */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: #020202;
+            border-bottom: 1px solid var(--crimson);
+            outline: 1px solid #111111;
+            outline-offset: -2px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.9), 0 5px 20px rgba(220, 20, 60, 0.15);
+            z-index: 1000;
+            padding: 10px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-brand {
+            display: flex;
+            flex-direction: column;
+            max-width: 75%;
+        }
+
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: normal;
+            letter-spacing: 2px;
+            color: #ffffff;
+            text-shadow: 0 0 8px var(--crimson), 0 0 15px var(--crimson);
+        }
+
+        .header-sub {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 1px;
+        }
+
+        .header-clocks {
+            display: flex;
+            gap: 15px;
+            font-size: 0.8rem;
+            background: #000000;
+            padding: 4px 10px;
+            border: 1px solid #1a1a1a;
+            outline: 1px solid rgba(220, 20, 60, 0.2);
+        }
+
+        .clock-item {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .clock-label {
+            font-size: 0.6rem;
+            color: var(--crimson);
+            letter-spacing: 0.5px;
+        }
+
+        .clock-time {
+            color: #ffffff;
+        }
+
+        /* MAIN CONTENT STRUCTURE & PANEL BORDERS */
+        .content-wrapper {
+            margin-top: 75px;
+            margin-bottom: 95px;
+            padding: 20px;
+            width: 100%;
+            max-width: 1500px;
+            margin-left: auto;
+            margin-right: auto;
+            flex-grow: 1;
+        }
+
+        section {
+            margin-bottom: 35px;
+            background: #020202;
+            border: 1px solid #111111;
+            outline: 1px solid rgba(255, 255, 255, 0.02);
+            padding: 15px;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.6);
+        }
+
+        .section-title {
+            font-size: 1.05rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 15px;
+            padding-bottom: 4px;
+            color: #ffffff;
+            border-bottom: 1px dashed rgba(220, 20, 60, 0.3);
+            text-shadow: 0 0 5px rgba(220, 20, 60, 0.5);
+        }
+
+        /* GRID STRUCTURING */
+        .audio-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+            gap: 10px;
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .video-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* MINIMALIST DETAILED CARDS */
+        .station-card {
+            background-color: var(--card-bg);
+            border: var(--panel-border);
+            border-top: 2px solid #222;
+            padding: 12px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.15s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 75px;
+            box-shadow: inset 0 1px 3px rgba(255,255,255,0.02);
+        }
+
+        .station-card:hover {
+            background-color: var(--card-hover);
+            border-color: var(--crimson);
+            border-top-color: var(--crimson);
+            box-shadow: 0 0 10px rgba(220, 20, 60, 0.2), inset 0 0 5px rgba(220, 20, 60, 0.1);
+        }
+
+        .station-card.active {
+            border-color: var(--crimson);
+            border-top-color: #ff2a4b;
+            background: #080203;
+            box-shadow: 0 0 15px var(--crimson-glow), inset 0 0 8px rgba(220, 20, 60, 0.2);
+        }
+
+        .station-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .station-name {
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #dddddd;
+        }
+
+        .station-card.active .station-name {
+            color: #ffffff;
+            text-shadow: 0 0 3px #ffffff;
+        }
+
+        .station-type {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .card-status {
+            align-self: flex-end;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        .station-card.active .card-status {
+            color: var(--crimson);
+            text-shadow: 0 0 4px var(--crimson);
+        }
+
+        .station-card.active .card-status::before {
+            content: '';
+            display: inline-block;
+            width: 5px;
+            height: 5px;
+            background-color: var(--crimson);
+            border-radius: 50%;
+            animation: pulse 1.2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.4; }
+            50% { opacity: 1; box-shadow: 0 0 6px var(--crimson); }
+            100% { opacity: 0.4; }
+        }
+
+        /* HIGHLY DETAILED VIDEO PORTAL FRAME */
+        .video-card {
+            background-color: #010101;
+            border: var(--panel-border);
+            outline: 1px solid rgba(220, 20, 60, 0.1);
+            outline-offset: 2px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.8);
+            transition: border 0.2s, box-shadow 0.2s;
+        }
+
+        .video-card:hover {
+            border-color: var(--crimson);
+            box-shadow: 0 0 15px rgba(220, 20, 60, 0.25);
+        }
+
+        .video-title-bar {
+            background: #080808;
+            padding: 8px 15px;
+            border-bottom: 1px solid #1c1c1c;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            color: #bbbbbb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .video-title-bar::after {
+            content: 'LIVE FEED';
+            font-size: 0.6rem;
+            color: var(--crimson);
+            border: 1px solid rgba(220,20,60,0.4);
+            padding: 1px 4px;
+        }
+
+        .video-frame-container {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%;
+            background: #000;
+        }
+
+        .video-frame-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+            background: #000;
+        }
+
+        .video-bypass-bar {
+            background: #040404;
+            padding: 5px 12px;
+            font-size: 0.7rem;
+            text-align: right;
+            border-top: 1px solid #111;
+        }
+
+        .video-bypass-link {
+            color: var(--text-muted);
+            text-decoration: none;
+        }
+        .video-bypass-link:hover {
+            color: var(--crimson);
+        }
+
+        /* STICKY RACK-MOUNTED AUDIO CONTROLLER */
+        .player-deck {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #020202;
+            border-top: 1px solid var(--crimson);
+            outline: 1px solid #111111;
+            outline-offset: -2px;
+            box-shadow: 0 -2px 15px rgba(0, 0, 0, 0.9), 0 -5px 20px rgba(220, 20, 60, 0.15);
+            z-index: 1000;
+            padding: 10px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .player-current {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 220px;
+            max-width: 320px;
+            background: #000000;
+            padding: 5px 10px;
+            border: 1px solid #111;
+        }
+
+        .player-status-indicator {
+            width: 8px;
+            height: 8px;
+            background-color: #222;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .player-status-indicator.playing {
+            background-color: #00ff55;
+            box-shadow: 0 0 8px #00ff55;
+        }
+
+        .player-status-indicator.loading {
+            background-color: #ff9900;
+            box-shadow: 0 0 8px #ff9900;
+            animation: pulse 0.8s infinite;
+        }
+
+        .player-meta-info {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .player-track-title {
+            font-size: 0.85rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #ffffff;
+        }
+
+        .player-track-group {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-top: 1px;
+            letter-spacing: 0.5px;
+        }
+
+        .player-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .control-trigger {
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.1s ease;
+        }
+
+        .main-play-trigger {
+            width: 36px;
+            height: 36px;
+            background: transparent;
+            border: 1px solid var(--crimson);
+            border-radius: 50%;
+            box-shadow: 0 0 5px var(--crimson-dim);
+        }
+
+        .main-play-trigger:hover:not(:disabled) {
+            background: var(--crimson);
+            color: #000000;
+            box-shadow: 0 0 10px var(--crimson);
+        }
+
+        .main-play-trigger:disabled {
+            border-color: #222;
+            color: #333;
+            cursor: not-allowed;
+        }
+
+        .player-deck-matrix {
+            min-width: 220px; 
+            text-align: right; 
+            font-size: 0.7rem; 
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+        }
+
+        /* CLEAR & HIGH VISIBILITY FOOTER DECK */
+        footer {
+            border-top: 1px solid #222222;
+            background-color: #030303;
+            padding: 30px 20px;
+            text-align: center;
+            font-size: 0.95rem;
+            color: #dddddd;
+            box-shadow: inset 0 5px 15px rgba(0,0,0,0.9);
+            margin-bottom: 20px;
+        }
+
+        .footer-closing {
+            font-style: italic;
+            margin-bottom: 10px;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+        }
+
+        .footer-copyright {
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            color: #aaaaaa;
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="global-audio-handler" preload="none"></audio>
+
+    <div id="dev-note-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="color: var(--crimson); margin-bottom: 15px; letter-spacing: 1px; font-weight: normal;">Developer's Note</h2>
+            <p style="color: #cccccc; font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px;">
+                This streaming portal is engineered with an aggressive connection cache-flushing protocol. When switching streams, the engine strips down active frames to eliminate pipeline lag and stream overlaps entirely. For security compliance, external embeds include fallback links to ensure uninhibited user convenience.
+            </p>
+            <button class="modal-close-btn" id="close-modal-trigger">ACKNOWLEDGE</button>
+        </div>
+    </div>
+
+    <div id="intro-screen">
+        <div class="intro-container">
+            <h1 class="intro-title">THE PEOPLE'S COF RADIO</h1>
+            <p class="intro-subtitle">Official Radio Streaming Platform of the People COF</p>
+            <button class="play-btn" id="enter-platform-trigger">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                STREAM NOW
+            </button>
+            <br>
+            <button class="dev-note-btn" id="dev-note-trigger">Developer's Note</button>
+        </div>
+    </div>
+
+    <div id="main-site">
+        <header>
+            <div class="header-brand">
+                <h1 class="header-title">THE PEOPLE'S COF RADIO</h1>
+                <span class="header-sub">The official radio station site of the People COF, for convenience or something jst say it all along</span>
+            </div>
+            <div class="header-clocks">
+                <div class="clock-item">
+                    <span class="clock-label">PHT (Local)</span>
+                    <span class="clock-time" id="clock-pht">00:00:00 AM</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="content-wrapper">
+            
+            <section>
+                <h2 class="section-title">Local Audio Streams</h2>
+                <div class="audio-grid" id="local-audio-dom-hook"></div>
+            </section>
+
+            <section>
+                <h2 class="section-title">International Audio Streams</h2>
+                <div class="audio-grid" id="intl-audio-dom-hook"></div>
+            </section>
+
+            <section>
+                <h2 class="section-title">Local Video Streams</h2>
+                <div class="video-grid" id="video-stream-dom-hook"></div>
+            </section>
+        </div>
+
+        <div class="player-deck">
+            <div class="player-current">
+                <div class="player-status-indicator" id="player-indicator"></div>
+                <div class="player-meta-info">
+                    <span class="player-track-title" id="player-title">No Station Selected</span>
+                    <span class="player-track-group" id="player-group">Choose a live stream above</span>
+                </div>
+            </div>
+
+            <div class="player-controls">
+                <button class="control-trigger main-play-trigger" id="master-toggle-play" disabled>
+                    <svg id="master-play-icon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                </button>
+            </div>
+            
+            <div class="player-deck-matrix">
+                Live Connection Matrix &bull; Instant Delivery Engine
+            </div>
+        </div>
+
+        <footer>
+            <p class="footer-closing">enjoy the radio, or the site, and have a good day, something like that</p>
+            <p class="footer-copyright">&copy; 2026 People COF. All radio station markings, trademarks and logos belong to their respective networks.</p>
+        </footer>
+    </div>
+
+    <script>
+        // IMMUTABLE STREAM SOURCE NODES
+        const localAudioStreams = [
+            { name: "DZRH News Radio", url: "https://a3.asurahosting.com:6910/radio.mp3" },
+            { name: "Energy FM Manila", url: "http://ph-icecast.eradioportal.com:8000/energyfm_manila" },
+            { name: "Bombo Radyo Cebu", url: "https://stream.zenolive.com/cc4d8bbnz9duv" },
+            { name: "Love Radio Manila", url: "https://azura.loveradio.com.ph/listen/love_radio_manila/radio.mp3" },
+            { name: "Win Radio Cebu 107.5", url: "http://stream.zeno.fm/sxk9ss4f4oeuv" },
+            { name: "DZRJ 810 AM", url: "http://111.125.87.226:8000/dzrjam" },
+            { name: "DYHP 612 RMN Cebu", url: "https://de3.amfmph.com/ssl/rmncebu?mp=%2Fstream" },
+            { name: "Easy Rock 96.3", url: "https://azura.easyrock.com.ph/listen/easy_rock_manila/radio.mp3" },
+            { name: "ICPRM Radio Philippines", url: "https://stream.zenolive.com/y6tkescw30duv" },
+            { name: "Brigada News FM Cebu", url: "http://18.141.67.248:8026/stream/1/" },
+            { name: "DZAS 702 AM", url: "http://icecast.eradioportal.com:8000/febc_dzas" },
+            { name: "WRock 96.3 AM", url: "https://wrockceb-iradioph.radioca.st/;stream" },
+            { name: "Manila Sound Radio", url: "https://stream.manilasoundradio.com/listen/manila-sound-radio/radio.mp3" }
+        ];
+
+        const intlAudioStreams = [
+            { name: "BBC World Radio", url: "https://utulsa.streamguys1.com/KWGSHD3-MP3" },
+            { name: "NewsNation", url: "https://live.amperwave.net/direct/wgnam-newsnationmp3-imc" },
+            { name: "ABC Radio Australia", url: "http://live-radio01.mediahubaustralia.com/RAEW/mp3/" },
+            { name: "Power 88", url: "https://puma.streemlion.com/power88" },
+            { name: "Radio England", url: "https://cast2.asurahosting.com/proxy/radioengland/stream" },
+            { name: "Replay News", url: "https://replaynewsit.ice.infomaniak.ch/replaynewsen-128.mp3" },
+            { name: "LBC UK", url: "http://media-ice.musicradio.com/LBCUKMP3" },
+            { name: "GB News Radio", url: "https://listen-gbnews.sharp-stream.com/gbnews.mp3" }
+        ];
+
+        // VIDEO STREAM NODES (Sanbox stripped to allow automatic cross-origin full framing)
+        const localVideoStreams = [
+            { name: "Wish 107.5", url: "https://www.wish1075.com/" },
+            { name: "Barangay LS 97.1", url: "https://www.gmanetwork.com/radio/streaming/dwls/" },
+            { name: "DZBB FM", url: "https://www.gmanetwork.com/radio/streaming/dzbb/" }
+        ];
+
+        // APPARATUS CORE DOM ELEMENTS
+        const audioInstance = document.getElementById('global-audio-handler');
+        const introScreen = document.getElementById('intro-screen');
+        const mainSite = document.getElementById('main-site');
+        const enterPlatformTrigger = document.getElementById('enter-platform-trigger');
+        
+        const devNoteTrigger = document.getElementById('dev-note-trigger');
+        const devNoteModal = document.getElementById('dev-note-modal');
+        const closeModalTrigger = document.getElementById('close-modal-trigger');
+        
+        const masterTogglePlay = document.getElementById('master-toggle-play');
+        const masterPlayIcon = document.getElementById('master-play-icon');
+        const playerIndicator = document.getElementById('player-indicator');
+        const playerTitle = document.getElementById('player-title');
+        const playerGroup = document.getElementById('player-group');
+
+        let currentActiveCard = null;
+
+        // PLATFORM DOM SETUP
+        window.addEventListener('DOMContentLoaded', () => {
+            renderAudioGrid(localAudioStreams, 'local-audio-dom-hook', 'Local Stream');
+            renderAudioGrid(intlAudioStreams, 'intl-audio-dom-hook', 'International Stream');
+            renderVideoGrid(localVideoStreams, 'video-stream-dom-hook');
+            initClockDaemon();
+            audioInstance.volume = 1; // Default volume since control is removed
+        });
+
+        // SITE ENTER TRANSITION
+        enterPlatformTrigger.addEventListener('click', () => {
+            introScreen.classList.add('fade-out');
+            setTimeout(() => {
+                mainSite.classList.add('fade-in');
+            }, 400); // Wait slightly for the fade-out to execute before fading in the dashboard
+        });
+
+        // DEVELOPER NOTE MODAL TRIGGERS
+        devNoteTrigger.addEventListener('click', () => {
+            devNoteModal.classList.add('show');
+        });
+
+        closeModalTrigger.addEventListener('click', () => {
+            devNoteModal.classList.remove('show');
+        });
+
+        // SYSTEM TIME SINCHRONIZER
+        function initClockDaemon() {
+            const clockPHT = document.getElementById('clock-pht');
+
+            setInterval(() => {
+                const now = new Date();
+                const options = { timeZone: 'Asia/Manila', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+                clockPHT.textContent = new Intl.DateTimeFormat('en-US', options).format(now);
+            }, 1000);
+        }
+
+        // ELEMENT GRID GENERATION
+        function renderAudioGrid(streams, targetId, groupLabel) {
+            const container = document.getElementById(targetId);
+            streams.forEach(stream => {
+                const card = document.createElement('div');
+                card.className = 'station-card';
+                card.innerHTML = `
+                    <div class="station-info">
+                        <span class="station-name">${stream.name}</span>
+                        <span class="station-type">${groupLabel}</span>
+                    </div>
+                    <div class="card-status">Offline</div>
+                `;
+                card.style.border = "1px solid #111";
+                card.style.outline = "1px solid rgba(255,255,255,0.01)";
+                
+                card.addEventListener('click', () => handleAudioSelection(card, stream, groupLabel));
+                container.appendChild(card);
+            });
+        }
+
+        function renderVideoGrid(streams, targetId) {
+            const container = document.getElementById(targetId);
+            streams.forEach(stream => {
+                const card = document.createElement('div');
+                card.className = 'video-card';
+                // Removed restrictive sandbox to force automatic cross-origin viewing for GMA properties
+                card.innerHTML = `
+                    <div class="video-title-bar">${stream.name}</div>
+                    <div class="video-frame-container">
+                        <iframe src="${stream.url}" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>
+                    </div>
+                    <div class="video-bypass-bar">
+                        <a href="${stream.url}" target="_blank" class="video-bypass-link">Open Frame External Node ↗</a>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // ANTILAG ENGINE MATRIX (FAST RESPONSE LIFECYCLE)
+        function handleAudioSelection(cardElement, stream, groupLabel) {
+            if (currentActiveCard === cardElement) {
+                toggleAudioState();
+                return;
+            }
+
+            if (currentActiveCard) {
+                currentActiveCard.classList.remove('active');
+                currentActiveCard.querySelector('.card-status').textContent = 'Offline';
+            }
+
+            currentActiveCard = cardElement;
+            currentActiveCard.classList.add('active');
+            currentActiveCard.querySelector('.card-status').textContent = 'Connecting';
+
+            playerTitle.textContent = stream.name;
+            playerGroup.textContent = groupLabel.toUpperCase();
+            masterTogglePlay.disabled = false;
+
+            setIndicatorState('loading');
+
+            // CRITICAL: FLUSH BUFFER IMMEDIATELY TO REMOVE PREVIOUS STREAM CACHE LAG
+            audioInstance.pause();
+            audioInstance.src = '';
+            audioInstance.load();
+
+            // HOT LOAD FRESH URL STREAM DESTINATION
+            audioInstance.src = stream.url;
+            
+            const playPromise = audioInstance.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    setIndicatorState('playing');
+                    setMasterPlayIcon(true);
+                    currentActiveCard.querySelector('.card-status').textContent = 'Live';
+                }).catch(() => {
+                    // Failover attempt context for cold streams
+                    setIndicatorState('loading');
+                });
+            }
+        }
+
+        function toggleAudioState() {
+            if (audioInstance.paused) {
+                audioInstance.play().then(() => {
+                    setIndicatorState('playing');
+                    setMasterPlayIcon(true);
+                    if (currentActiveCard) currentActiveCard.querySelector('.card-status').textContent = 'Live';
+                });
+            } else {
+                audioInstance.pause();
+                setIndicatorState('stopped');
+                setMasterPlayIcon(false);
+                if (currentActiveCard) currentActiveCard.querySelector('.card-status').textContent = 'Paused';
+            }
+        }
+
+        masterTogglePlay.addEventListener('click', toggleAudioState);
+
+        // STATE STREAM SYNC EVENT LISTENERS
+        audioInstance.addEventListener('waiting', () => {
+            setIndicatorState('loading');
+            if (currentActiveCard) currentActiveCard.querySelector('.card-status').textContent = 'Buffering';
+        });
+
+        audioInstance.addEventListener('playing', () => {
+            setIndicatorState('playing');
+            setMasterPlayIcon(true);
+            if (currentActiveCard) currentActiveCard.querySelector('.card-status').textContent = 'Live';
+        });
+
+        audioInstance.addEventListener('error', () => {
+            setIndicatorState('stopped');
+            setMasterPlayIcon(false);
+            playerTitle.textContent = "Re-indexing Active Connection Node";
+            playerGroup.textContent = "Data connection timeout or remote stream temporary unreachable.";
+            if (currentActiveCard) {
+                currentActiveCard.querySelector('.card-status').textContent = 'Retry';
+            }
+        });
+
+        function setIndicatorState(state) {
+            playerIndicator.className = 'player-status-indicator';
+            if (state === 'playing') playerIndicator.classList.add('playing');
+            if (state === 'loading') playerIndicator.classList.add('loading');
+        }
+
+        function setMasterPlayIcon(isPlaying) {
+            if (isPlaying) {
+                masterPlayIcon.innerHTML = `<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>`;
+            } else {
+                masterPlayIcon.innerHTML = `<path d="M8 5v14l11-7z"/>`;
+            }
+        }
+    </script>
+</body>
+</html>
